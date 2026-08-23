@@ -42,10 +42,13 @@ def kalman_slope(log_price: pd.Series, dim: int = 2, R: float = 1.0) -> pd.Serie
 
 
 def momentum_norm(close: pd.Series, window: int) -> pd.Series:
-    """Normalized return over `window` bars. Uses pandas pct_change (causal)."""
+    """Normalized return over `window` bars. Uses pandas pct_change (causal).
+
+    The normalizing std uses at least 10 bars (a 1-bar momentum window is valid but
+    rolling(1).std() is NaN, which would kill the feature at coarse timeframes).
+    """
     ret = close.pct_change(window)
-    # normalize by rolling std of the window (causal, data <= t)
-    std = close.pct_change().rolling(window).std()
+    std = close.pct_change().rolling(max(int(window), 10)).std()
     return ret / std
 
 
