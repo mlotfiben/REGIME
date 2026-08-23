@@ -28,22 +28,22 @@ from sklearn.linear_model import LogisticRegression
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "engine"))
 
 DATA = Path(__file__).resolve().parent.parent / "data"
-FEATS = ["mom_s", "mom_m", "mom_l", "trend_eff_N", "breakout", "kalman_slope", "vol_gate"]
+FEATS = ["mom_s", "mom_m", "mom_l", "trend_eff_N", "breakout", "kalman_slope", "vol_gate",
+         "fracdiff_price", "fracdiff_ret", "session"]
 CONF = dict(mom_windows=(1, 5, 24), eff=5, breakout=24, atr=5, vol=24, H=4)
 
 
 def load(df):
-    from engine.features import atr, build_features
+    from engine.enhanced_features import build_enhanced_features
+    from engine.features import atr
     from engine.target import barrier_hit
     a = atr(df, CONF["atr"])
-    f = build_features(df, mom_windows=CONF["mom_windows"], eff_window=CONF["eff"],
-                       breakout_window=CONF["breakout"], atr_window=CONF["atr"],
-                       vol_window=CONF["vol"])
+    f = build_enhanced_features(df)
     lab = barrier_hit(df, a, H=CONF["H"], up_mult=2.0, down_mult=-1.0)
-    X = f.dropna()
-    y = lab.reindex(X.index)
-    m = y.notna()
-    return df, a, X[m], y[m]
+    common = f.dropna().index.intersection(lab.dropna().index)
+    X = f.loc[common, FEATS]
+    y = lab.loc[common]
+    return df, a, X, y
 
 
 def causal_reynolds(df, window=20):
