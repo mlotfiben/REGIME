@@ -41,3 +41,40 @@ Status: **DRAFT — freeze after owner review.** Asset: XAUUSD 1m.
 ## Failure action
 Document the null; retire or scope precisely; do not soften the gate (taxonomy
 pitfall 15).
+
+---
+
+## DECISION-LEVEL STAGE (pre-registered 2026-08-23) — does the barrier edge survive costs?
+
+Separate stage, run ONLY if Gate R1 accuracy shows a usable signal (it does: AUC 0.59–0.64
+at 15m–1h, well above momentum-only). Tests the ECONOMIC question the accuracy gate cannot.
+
+**Strategy (long-only, positive-drift-faithful):** at bar t, walk-forward logistic predicts
+p = P(hit +2ATR before −1ATR in next H bars). Enter long when p ≥ θ (θ = 80th percentile of
+TRAINING p, causal — computed per fold on train only, NOT outcome-selected). Hold until a
+barrier or time exit:
+- +2·ATR[t] first → trade return = +2·ATR[t]/close[t]
+- −1·ATR[t] first → trade return = −1·ATR[t]/close[t]
+- neither within H → time exit at close[t+H]: return = close[t+H]/close[t] − 1
+Flat otherwise. Returns in fractional units (comparable to the baseline).
+
+**Cost:** applied per trade (entry+exit), on turnover only (never per-bar — taxonomy bug 22).
+**MANDATORY cost-sensitivity curve:** 0 / 0.01 / 0.02 / 0.05 / 0.10 % round-trip.
+
+**Fair baseline (the crux, per risk-matched-baseline reference):** the scheme must beat its
+own RISK-MATCHED CONSTANT exposure `w_const = mean(position)` — same average long exposure held
+constantly (captures gold's drift), zero turnover. Always-in (100%) reported for context only,
+NOT a fair comparison (different average risk).
+
+**Pass bar (pre-committed):** scheme net Sharpe > risk-matched-constant net Sharpe at the
+MEASURED cost on 1h AND 30m, AND day-clustered block-bootstrap one-sided p < 0.05 that the
+Sharpe difference (scheme − const) is positive. Bonferroni α=0.05/2 across the two timeframes.
+
+**Harness controls (validate the harness, not the signal):**
+- Positive: inject a known drift↔barrier-signal link → harness must reward the scheme.
+- Negative: on iid returns (no structure) the harness must NOT manufacture an edge (bootstrap
+  p per seed must not be < 0.05 in any seed).
+
+**Live test:** NOT run at this stage. Only if the decision-level test PASSES net-of-cost AND a
+paper-trade replay (offline, exact live code path, no broker) confirms it do we even consider a
+live test. Live on an unvalidated signal = premature (the program's repeated mistake).
