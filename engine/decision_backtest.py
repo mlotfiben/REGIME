@@ -109,12 +109,12 @@ def oos_probs_and_positions(X, y, df, atr, conf, theta_q=0.80, n_folds=4):
                             k = int(tu) + 1
                             ret_te[i + k] = 2 * base / entry_price
                             pos_te[i:i + k + 1] = 1.0
-                            i += k; continue
+                            i += k + 1; continue   # no immediate re-entry (integrity fix)
                         if td < tu and np.isfinite(td):
                             k = int(td) + 1
                             ret_te[i + k] = -base / entry_price
                             pos_te[i:i + k + 1] = 1.0
-                            i += k; continue
+                            i += k + 1; continue
                     # time exit (guaranteed to advance i)
                     end_i = min(i + H, L - 1)
                     if end_i <= i:
@@ -122,7 +122,7 @@ def oos_probs_and_positions(X, y, df, atr, conf, theta_q=0.80, n_folds=4):
                     else:
                         ret_te[end_i] = c_te[end_i] / entry_price - 1
                         pos_te[i:end_i + 1] = 1.0
-                        i = end_i
+                        i = end_i + 1
                     continue
             i += 1
         # write back into the position/return series on the test slice positions

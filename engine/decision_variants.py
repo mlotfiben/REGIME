@@ -168,17 +168,18 @@ def walkforward_entries(X, y, df, atr, re_t, variant, theta_q=0.80, meta_q=0.80,
                             k = int(tu) + 1
                             ret_te[i + k] = 2 * base / ep
                             pos_te[i:i + k + 1] = 1.0
-                            i += k; continue
+                            i += k + 1; continue   # no immediate re-entry (integrity fix)
                         if td < tu and np.isfinite(td):
                             k = int(td) + 1
                             ret_te[i + k] = -base / ep
                             pos_te[i:i + k + 1] = 1.0
-                            i += k; continue
+                            i += k + 1; continue
                     end_i = min(i + H, L - 1)
                     if end_i > i:
                         ret_te[end_i] = c_te[end_i] / ep - 1
                         pos_te[i:end_i + 1] = 1.0
-                        i = end_i; continue
+                        i = end_i + 1
+                        continue
             i += 1
         pos.iloc[ts:te] = pos_te
         trade_ret.iloc[ts:te] = ret_te
