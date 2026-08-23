@@ -6,10 +6,14 @@ Status: **DRAFT — freeze after owner review.** Asset: XAUUSD 1m.
 - **Asset / timeframe:** XAUUSD, **1m** (6,822,715 bars, 2004–2026). Raw CSV
   `~/machL/MarketPressure/data/raw/XAU_1m_data.csv`, read-only, cached to parquet.
 - **Target (A, frozen):** does price hit +2·ATR before −1·ATR within the next H bars?
-  Binary. **H = 60 bars (1 hour of 1m) — freeze in review.**
+  Binary. **H = 60 bars (1 hour of 1m) — FROZEN by owner 2026-08-23.**
+- **Purpose (owner):** ACADEMIC — establish whether the method works with statistically
+  valid conclusions. Cost is a known operational killer (a directional model already
+  died under costs); therefore the GATE tests OOS PREDICTIVE POWER (AUC), and cost is
+  reported as a SECONDARY decision-level number, not the gate criterion.
 - **Features (causal, frozen):** mom_s/mom_m/mom_l, trend_eff_N, breakout, vol_gate,
-  kalman_slope (filterpy causal). Windows (mom=(4,12,48), eff=20, breakout=20,
-  atr=20, vol=200) — recalibrate for 1m before freeze (owner rule: per-freq).
+  kalman_slope (filterpy causal). **1m windows FROZEN: mom=(60,300,1440), eff=120,
+  breakout=240, atr=20, vol=1440** (recalibrated per-freq, owner rule).
 - **Cost/slippage:** single round-trip, correct units, applied on turnover ONLY (NOT
   per-bar — per-bar cost crushes Sharpe, taxonomy bug 22). At 1m this is dominant;
   measure the actual number before freeze.
