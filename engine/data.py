@@ -1,7 +1,7 @@
 """Data loading for REGIME — library-first, read-only.
 
-Loads the shared H1 cache (~/INFLECTION/data/xau_h1.parquet). Never re-resample
-raw 1m here; the cache is the target-frequency input.
+Reads the RAW 1m XAU CSV once and caches to parquet. Never re-parse the CSV per run.
+The raw CSV is never modified/deleted.
 """
 from __future__ import annotations
 
@@ -10,19 +10,26 @@ from pathlib import Path
 
 import pandas as pd
 
-H1_CACHE = Path(os.environ.get("REGIME_H1_CACHE", "~/INFLECTION/data/xau_h1.parquet")).expanduser()
+RAW_CSV = Path(os.environ.get("REGIME_RAW_1M", "~/machL/MarketPressure/data/raw/XAU_1m_data.csv")).expanduser()
+CACHE = Path(__file__).resolve().parent.parent / "data" / "xau_1m.parquet"
 
 
-def load_h1(cache: Path = H1_CACHE) -> pd.DataFrame:
-    """Load XAUUSD H1 bars. Returns df indexed by timestamp with o/h/l/c columns."""
-    if not cache.exists():
-        raise FileNotFoundError(f"H1 cache not found: {cache}")
-    df = pd.read_parquet(cache)
-    df.columns = [str(c).lower() for c in df.columns]
+def load_1m(csv: Path = RAW_CSV, cache: Path = CACHE, force: bool = False) -> pd.DataFrame:
+    """Load XAUUSD 1m bars. Caches to parquet after first parse of the CSV."""
+    if cache.exists() and not force:
+        df = pd.read_parquet(cache)
+    else:
+        if not csv.exists():
+            raise FileNotFoundError(f"Raw 1m CSV not found: {csv}")
+        df = pd.read_csv(csv)
+        df.columns = [str(c).lower() for c in df.columns]
+        df["date"] = pd.to_datetime(df["date"])
+        df = df.set_index("date").sort_index()
+        cache.parent.mkdir(parents=True, exist_ok=True)
+        df.to_parquet(cache)
     if not isinstance(df.index, pd.DatetimeIndex):
         df.index = pd.to_datetime(df.index)
-    df = df.sort_index()
-    return df
+    return df.sort_index()
 
 
 def bar_count(df: pd.DataFrame) -> int:
