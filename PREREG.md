@@ -78,3 +78,32 @@ Sharpe difference (scheme − const) is positive. Bonferroni α=0.05/2 across th
 **Live test:** NOT run at this stage. Only if the decision-level test PASSES net-of-cost AND a
 paper-trade replay (offline, exact live code path, no broker) confirms it do we even consider a
 live test. Live on an unvalidated signal = premature (the program's repeated mistake).
+
+---
+
+## PARALLEL VARIANTS (pre-registered 2026-08-23) — two ways to cut turnover, run both
+
+The base decision test FAILED under cost (turnover × thin edge). Two literature-backed
+variants attack the turnover directly, run IN PARALLEL, same cost discipline + fair baseline
+(risk-matched constant):
+
+**Variant R (Re_t/vol-regime gate — reuse existing gauge, per owner):** same barrier strategy,
+but ONLY enter when Re_t (canonical causal `compute_reynolds`, COLORSLOPE engine, trailing-ATR)
+indicates a tradeable regime. Pre-registered gate: `Re_t >= median` (the laminar/trending half,
+higher conviction) vs ungated. This tests the owner's hypothesis that the existing Re_t gauge
+cuts turnover enough to flip economics — WITHOUT re-learning a filter. Prior: C1 said pure
+instability-gating fails on gold (forfeits drift), so a *positive* Re_t-gate result would be a
+meaningful discovery; a flat/negative result is expected.
+
+**Variant M (meta-labeling — López de Prado Ch.3.6/50):** secondary logistic predicts
+P(trade profitable after cost | primary features + Re_t + session + vol_gate), trade only the
+top-confidence quantile (meta_θ = 80th pctile of TRAINING meta-p, causal). This is the
+multivariate learned filter that single-feature Re_t-gating cannot see (interactions). If R
+fails but M succeeds, the profitability signal is in the combination.
+
+Both evaluated with: cost-sensitivity curve, risk-matched constant baseline, day-cluster
+bootstrap P(scheme worse). PASS = scheme net Sharpe > const net Sharpe at measured cost AND
+bootstrap p < 0.05 (one-sided, scheme better), Bonferroni across variants × timeframes (1h only).
+
+**Result protocol:** report BOTH in one table; do not interpret one leg before the other
+completes (owner reporting rule).
